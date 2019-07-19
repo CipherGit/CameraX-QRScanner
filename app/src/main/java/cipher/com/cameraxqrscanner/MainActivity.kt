@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.Rational
 import android.widget.Toast
 import androidx.camera.core.*
@@ -15,10 +16,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import cipher.com.utils.AutoFitPreviewBuilder
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
-import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
 
+private const val TAG = "CameraX QR Scanner"
 private const val REQUEST_CODE_PERMISSIONS = 10
 private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
@@ -75,11 +76,17 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, QRCodeListener{
     }
 
     override fun onQRReadSuccess(results: List<FirebaseVisionBarcode>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        for(result in results){
+            val valueType = result.valueType
+            val rawValue = result.rawValue
+
+            Log.d(TAG, "Value Type: $valueType")
+            Log.d(TAG, "Raw Value: $rawValue")
+        }
     }
 
     override fun onQRReadFailure(exception: Exception) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        exception.printStackTrace()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
