@@ -13,8 +13,8 @@ import android.widget.Toast
 import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.LifecycleOwner
 import cipher.com.utils.AutoFitPreviewBuilder
+import com.google.firebase.FirebaseApp
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
@@ -23,7 +23,7 @@ private const val TAG = "CameraX QR Scanner"
 private const val REQUEST_CODE_PERMISSIONS = 10
 private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
-class MainActivity : AppCompatActivity(), LifecycleOwner, QRCodeListener{
+class MainActivity : AppCompatActivity(), QRCodeListener{
 
     private var preview: Preview? = null
     private var qrCodeAnalyzer: ImageAnalysis? = null
@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, QRCodeListener{
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        FirebaseApp.initializeApp(this)
 
         // Request camera permissions
         if (allPermissionsGranted()) {
@@ -82,6 +84,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, QRCodeListener{
 
             Log.d(TAG, "Value Type: $valueType")
             Log.d(TAG, "Raw Value: $rawValue")
+            Toast.makeText(this, rawValue, Toast.LENGTH_SHORT).show()
         }
     }
 
