@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity(), QRCodeListener{
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
+
+        Toast.makeText(this, "Please point at a QR Code!", Toast.LENGTH_LONG).show()
     }
 
     private fun startCamera(){
