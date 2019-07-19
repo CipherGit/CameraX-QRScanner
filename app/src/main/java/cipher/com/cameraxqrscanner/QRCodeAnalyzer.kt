@@ -25,9 +25,9 @@ class QRCodeAnalyzer(private val qrListener: QRCodeListener) : ImageAnalysis.Ana
                 val fireBaseImage = FirebaseVisionImage.fromMediaImage(it, rotationDegrees)
                 firebaseQRDetector.detectInImage(fireBaseImage)
                     .addOnSuccessListener { results ->
-                        qrListener.onSuccess(results)
+                        qrListener.onQRReadSuccess(results)
                     }.addOnFailureListener { exception ->
-                        qrListener.onFailure(exception)
+                        qrListener.onQRReadFailure(exception)
                     }
             }
         }

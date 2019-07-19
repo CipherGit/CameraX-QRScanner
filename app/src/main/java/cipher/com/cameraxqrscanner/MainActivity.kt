@@ -4,24 +4,28 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.DisplayMetrics
 import android.util.Rational
 import android.widget.Toast
-import androidx.camera.core.CameraX
-import androidx.camera.core.Preview
-import androidx.camera.core.PreviewConfig
+import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import cipher.com.utils.AutoFitPreviewBuilder
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.Exception
 
 private const val REQUEST_CODE_PERMISSIONS = 10
 private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
-class MainActivity : AppCompatActivity(), LifecycleOwner {
+class MainActivity : AppCompatActivity(), LifecycleOwner, QRCodeListener{
 
     private var preview: Preview? = null
+    private var qrCodeAnalyzer: ImageAnalysis? = null
     private var lensFacing = CameraX.LensFacing.BACK
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,8 +36,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
         if (allPermissionsGranted()) {
             camera_viewfinder.post { startCamera() }
         } else {
-            ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
     }
 
@@ -49,10 +52,34 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             setTargetRotation(camera_viewfinder.display.rotation)
         }.build()
 
-        // Build the viewfinder use case
+        // Setup image analysis pipeline that looks for QRCodes
+        val analyzerConfig = ImageAnalysisConfig.Builder().apply {
+            // Use a worker thread for image analysis to prevent glitches
+            val analyzerThread = HandlerThread(
+                "FirebaseQRScanner").apply { start() }
+            setCallbackHandler(Handler(analyzerThread.looper))
+            // In our analysis, we care more about the latest image than
+            // analyzing *every* image
+            setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+        }.build()
+
+        // Build the preview viewfinder use case
         preview = AutoFitPreviewBuilder.build(previewConfig, camera_viewfinder)
 
-        CameraX.bindToLifecycle(this, preview)
+        // Build the image analyser and instantiate our analyzer
+        qrCodeAnalyzer = ImageAnalysis(analyzerConfig).also {
+            it.analyzer = QRCodeAnalyzer(this)
+        }
+
+        CameraX.bindToLifecycle(this, preview, qrCodeAnalyzer)
+    }
+
+    override fun onQRReadSuccess(results: List<FirebaseVisionBarcode>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onQRReadFailure(exception: Exception) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
